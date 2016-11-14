@@ -1,0 +1,8 @@
+[package]
+name = "android_log"
+version = "0.1.0"
+authors = ["Saleem Rashid <dev@saleemrashid.com>"]
+
+repository = "https://github.com/saleemrashid/android_log.rs"
+
+[dependencies]
