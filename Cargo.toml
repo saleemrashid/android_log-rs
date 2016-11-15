@@ -7,3 +7,4 @@ repository = "https://github.com/saleemrashid/android_log.rs"
 
 [dependencies]
 log = "*"
+android_liblog-sys = "0.1"

@@ -27,14 +27,18 @@
 //! 12-25 12:00:00.000  1234  1234 E MyApp: Nothing more to say
 
 extern crate log;
+extern crate android_liblog_sys;
 
-use log::{Log, LogLevelFilter, LogMetadata, LogRecord, SetLoggerError};
+use std::ffi::CString;
+
+use log::{Log, LogLevel, LogLevelFilter, LogMetadata, LogRecord, SetLoggerError};
+use android_liblog_sys::{__android_log_write, LogPriority};
 
 /// `AndroidLogger` is the implementation of the logger.
 ///
 /// It should not be used from Rust libraries which should only use the facade.
 pub struct AndroidLogger {
-    tag: String,
+    tag: CString,
     format: Box<Fn(&LogRecord) -> String + Sync + Send>,
 }
 
@@ -65,7 +69,7 @@ pub struct AndroidLogger {
 /// }
 /// ```
 pub struct LogBuilder {
-    tag: String,
+    tag: CString,
     format: Box<Fn(&LogRecord) -> String + Sync + Send>,
 }
 
@@ -87,7 +91,7 @@ impl AndroidLogger {
     /// Initializes the global logger with `self`
     pub fn init(self) -> Result<(), SetLoggerError> {
         log::set_logger(|max_level| {
-            max_level.set(LogLevelFilter::Off);
+            max_level.set(LogLevelFilter::max());
             Box::new(self)
         })
     }
@@ -103,7 +107,19 @@ impl Log for AndroidLogger {
             return;
         }
 
-        // TODO: Implement logging
+        let format = CString::new((self.format)(record)).unwrap();
+
+        let prio = match record.level() {
+            LogLevel::Error => LogPriority::ERROR,
+            LogLevel::Warn  => LogPriority::WARN,
+            LogLevel::Info  => LogPriority::INFO,
+            LogLevel::Debug => LogPriority::DEBUG,
+            LogLevel::Trace => LogPriority::VERBOSE,
+        };
+
+        unsafe {
+            __android_log_write(prio as _, self.tag.as_ptr(), format.as_ptr());
+        }
     }
 }
 
@@ -111,7 +127,7 @@ impl LogBuilder {
     /// Initializes the builder with defaults
     pub fn new<S: Into<String>>(tag: S) -> LogBuilder {
         LogBuilder {
-            tag: tag.into(),
+            tag: CString::new(tag.into()).unwrap(),
             format: Box::new(|record: &LogRecord| {
                 format!("{}: {}",
                         record.location().module_path(),
