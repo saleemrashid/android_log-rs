@@ -1,0 +1,22 @@
+language: rust
+sudo: false
+
+rust:
+    - nightly
+    - stable
+
+matrix:
+    fast_finish: true
+    allow_failures:
+        - rust: stable
+
+    include:
+        - rust: nightly
+          before_install:
+              - cargo install rustfmt --root ~/rust
+          script:
+              - cargo fmt -- --write-mode=diff
+
+script:
+    - cargo build --verbose
+    - cargo test --verbose --no-fail-fast

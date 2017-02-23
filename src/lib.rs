@@ -111,8 +111,8 @@ impl Log for AndroidLogger {
 
         let prio = match record.level() {
             LogLevel::Error => LogPriority::ERROR,
-            LogLevel::Warn  => LogPriority::WARN,
-            LogLevel::Info  => LogPriority::INFO,
+            LogLevel::Warn => LogPriority::WARN,
+            LogLevel::Info => LogPriority::INFO,
             LogLevel::Debug => LogPriority::DEBUG,
             LogLevel::Trace => LogPriority::VERBOSE,
         };
@@ -129,9 +129,7 @@ impl LogBuilder {
         LogBuilder {
             tag: CString::new(tag.into()).unwrap(),
             format: Box::new(|record: &LogRecord| {
-                format!("{}: {}",
-                        record.location().module_path(),
-                        record.args())
+                format!("{}: {}", record.location().module_path(), record.args())
             }),
         }
     }
